@@ -347,7 +347,7 @@ int Parse_VAR_DEFINITION_TAG()
 
 void Parse_TYPE_DEFENITION()
 {
-	int type = 0;
+	int typeHolderBeforeEnteringSymbolTable = 0;
 	SymbolTableEntry* entry;
 	Token* curr;
 	
@@ -364,60 +364,46 @@ void Parse_TYPE_DEFENITION()
 		return;
 	switch (current_token->kind)
 	{
-	case TOKEN_TYPE:
-		//Get nextToken();
-		//Add to table (If already declared so rise semantic error)
-		//If not declared so I need to add to the hash table what is the type
-		//So Parse and add the Type indicator to the hash table.
-		//
+		case TOKEN_TYPE:
+			//Get nextToken();
+			//Add to table (If already declared so rise semantic error)
+			//If not declared so I need to add to the hash table what is the type
+			//So Parse and add the Type indicator to the hash table.
+		
 		
 
-		//fprintf(yyout, "{TYPE_DEFINITION-->type id is TYPE_INDICATOR}\n");
-		printf("{TYPE_DEFINITION-->type id is TYPE_INDICATOR}\n");
+			//fprintf(yyout, "{TYPE_DEFINITION-->type id is TYPE_INDICATOR}\n");
+			printf("{TYPE_DEFINITION-->type id is TYPE_INDICATOR}\n");
 		
-		match(TOKEN_ID, 1, followArr, 1, firstArr);
+			match(TOKEN_ID, 1, followArr, 1, firstArr);
 		
 		
-		//symboltable_insert(currentTable,)
+			//symboltable_insert(currentTable,)
 		
-		current_token = activeToken();
-		//if(symboltable_find(currentTable,))
+			current_token = activeToken();
 		
-		if (symboltable_lookup(currentTable, current_token->lexeme) == NULL)
-		{
-			entry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
-			entry->type = 0; 
-			entry->type=current_token->kind;
-			symboltable_insert(currentTable, current_token->lexeme, entry);
-			if (match(TOKEN_IS, 1, followArr, 1, firstArr) == false) {
-				fprintf(yyout, "---- Semantic Error: Expected 'IS' TOKEN\n");
+			//Already defined
+			if (symboltable_find(currentTable, current_token->lexeme) != NULL) {
+				fprintf(yyout, " -------- Semantcc Error, line %d: ID %s, Already defined in current scope!\n", current_token->lineNumber, current_token->lexeme);
+			}
+			else
+			{
+				symboltable_insert(currentTable, current_token->lexeme, NULL);
 			}
 
-			
-			type = Parse_TYPE_INDICATOR();
-			if (type==TYPE_UNDEFINED){
-				fprintf(yyout, "----- Semantic Error: Type isn't define properly\n", current_token->lineNumber, current_token->lexeme);
-			}
-			else {
-				entry->type = type;
-			}
-			//entry = symboltable_find(currentTable, current_token->lexeme);
-		}
-		else
-		{
-			fprintf(yyout, " -------- Semantc Error, line %d: ID %s, Already defined in current scope!\n", current_token->lineNumber, current_token->lexeme);
-		}
-		
-		
-		
-	
-		
-		break;
+			typeHolderBeforeEnteringSymbolTable = Parse_TYPE_INDICATOR();
 
-	default:
+			if (typeHolderBeforeEnteringSymbolTable) {
+				printf("Parser Error - There is not type like that");
+			}
 
-		errorHandler(followArr, firstArr, 1, 1, current_token);
-		break;
+			symboltable_find(currentTable, current_token->lexeme)->type = typeHolderBeforeEnteringSymbolTable;
+			break;
+
+		default:
+
+			errorHandler(followArr, firstArr, 1, 1, current_token);
+			break;
 	}
 }
 
