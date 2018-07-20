@@ -875,13 +875,10 @@ int Parse_RECEIVER(int type)
 
 	Token *current_token = next_token();
 	if (!current_token)
-		return;
+		return 0;
 	switch (current_token->kind)
 	{
 		case TOKEN_MALLOC:
-
-	//		fprintf(yyout, "{RECEIVER --> malloc(size_of(id))}\n");
-			//printf("{RECEIVER --> malloc(size_of(id))}\n");
 
 			match(TOKEN_OPARENTHESIS, 1, followArr, 6, firstArr);
 			match(TOKEN_SIZE_OF, 1, followArr, 6, firstArr);
@@ -893,10 +890,8 @@ int Parse_RECEIVER(int type)
 			
 
 		case TOKEN_INT:
-			current_token = back_token();
 			return TYPE_INT;
 		case TOKEN_REAL:
-			current_token = back_token();
 			return TYPE_REAL;
 		
 		case TOKEN_SIZE_OF:
@@ -912,13 +907,9 @@ int Parse_RECEIVER(int type)
 
 		case TOKEN_ID:
 
-		//	fprintf(yyout, "{RECEIVER --> EXPRESSION}\n");
-			//printf("{RECEIVER --> EXPRESSION}\n");
 
 			current_token = back_token();
-			Parse_EXPRESSION();
-
-			return 0;
+			return Parse_EXPRESSION(type);
 
 		default:
 
@@ -927,7 +918,7 @@ int Parse_RECEIVER(int type)
 	}
 }
 
-void Parse_EXPRESSION()
+int Parse_EXPRESSION(int type)
 {
 	Token* active;
 	eTOKENS *firstArr = (eTOKENS *)malloc(sizeof(eTOKENS) * 5);
@@ -945,64 +936,67 @@ void Parse_EXPRESSION()
 
 	Token *current_token = next_token();
 	if (!current_token)
-		return;
+		return 0;
 	switch (current_token->kind)
 	{
+		case TOKEN_ID:
 
-	case TOKEN_ID:
+	//		fprintf(yyout, "{EXPRESSION --> id EXPRESSION_TAG}\n");
+			//printf("{EXPRESSION --> id EXPRESSION_TAG}\n");
 
-//		fprintf(yyout, "{EXPRESSION --> id EXPRESSION_TAG}\n");
-		//printf("{EXPRESSION --> id EXPRESSION_TAG}\n");
 
-		Parse_EXPRESSION_TAG();
-		break;
+			//I Can Add here the return;
+			Parse_EXPRESSION_TAG(type);
+			return 0;
+			break;
 
-	case TOKEN_INT:
+		case TOKEN_INT:
+			if (type != TYPE_UNDEFINED && type != TYPE_INT) {
+				printf("--Error: mismatch between types of the left and the right sides of the assignment \n");
+			}
+			//current_token = back_token();
+			return TYPE_INT;
+		case TOKEN_REAL:
+			if (type != TYPE_UNDEFINED && type != TYPE_REAL) {
+				printf("--Error: mismatch between types of the left and the right sides of the assignment \n");
+			}
+			//current_token = back_token();
+			return TYPE_REAL;
 
-//		fprintf(yyout, "{EXPRESSION --> int_num}\n");
-		//printf("{EXPRESSION --> int_num}\n");
 
-		break;
+		case TOKEN_MEMORY:
 
-	case TOKEN_REAL:
+		//	fprintf(yyout, "{EXPRESSION --> &id}\n");
+			//printf("{EXPRESSION --> &id}\n");
 
-//	fprintf(yyout, "{EXPRESSION --> real_num}\n");
-		//printf("{EXPRESSION --> real_num}\n");
+			match(TOKEN_ID, 4, followArr, 5, firstArr);
+			current_token = back_token();
+			current_token = next_token();
+			return (8 + symboltable_lookup(currentTable, current_token->lexeme)->type);
 
-		break;
+		case TOKEN_SIZE_OF:
 
-	case TOKEN_MEMORY:
+	//		fprintf(yyout, "{EXPRESSION --> size_of(id)}\n");
+			//printf("{EXPRESSION --> size_of(id)}\n");
 
-	//	fprintf(yyout, "{EXPRESSION --> &id}\n");
-		//printf("{EXPRESSION --> &id}\n");
+			match(TOKEN_OPARENTHESIS, 4, followArr, 5, firstArr);
+			match(TOKEN_ID, 4, followArr, 5, firstArr);
+			active = activeToken();
+			if (symboltable_find(currentTable, active->lexeme) != TYPE_INT) {
+				fprintf(yyout,"Semantic Error ---- Expect integer in Size of ----- \n");
+			}
+			match(TOKEN_CPARENTHESIS, 4, followArr, 5, firstArr);
+			return 0;
+		default:
 
-		match(TOKEN_ID, 4, followArr, 5, firstArr);
-		break;
-
-	case TOKEN_SIZE_OF:
-
-//		fprintf(yyout, "{EXPRESSION --> size_of(id)}\n");
-		//printf("{EXPRESSION --> size_of(id)}\n");
-
-		match(TOKEN_OPARENTHESIS, 4, followArr, 5, firstArr);
-		match(TOKEN_ID, 4, followArr, 5, firstArr);
-		active = activeToken();
-		if (symboltable_find(currentTable, active->lexeme) != TYPE_INT) {
-			fprintf(yyout,"Semantic Error ---- Expect integer in Size of ----- \n");
-		}
-		match(TOKEN_CPARENTHESIS, 4, followArr, 5, firstArr);
-		break;
-
-	default:
-
-		errorHandler(followArr, firstArr, 4, 5, current_token);
-		break;
+			errorHandler(followArr, firstArr, 4, 5, current_token);
+			return 0;
 	}
 }
 
-void Parse_EXPRESSION_TAG()
+void Parse_EXPRESSION_TAG(int type)
 {
-
+	int leftOp,rightOp,holder;
 	eTOKENS *firstArr_inside;
 
 	eTOKENS *firstArr = (eTOKENS *)malloc(sizeof(eTOKENS) * 7);
