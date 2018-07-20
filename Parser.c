@@ -796,6 +796,7 @@ void Parse_COMMAND_TAG()
 {
 	int leftOperand;
 	int rightOperand;
+	int holder;
 	eTOKENS *firstArr = (eTOKENS *)malloc(sizeof(eTOKENS) * 3);
 	firstArr[0] = TOKEN_OBRACKET;
 	firstArr[1] = TOKEN_POINTER;
@@ -810,60 +811,54 @@ void Parse_COMMAND_TAG()
 	switch (current_token->kind)
 	{
 
-	case TOKEN_OBRACKET:
+		case TOKEN_OBRACKET:
 
-//		fprintf(yyout, "{COMMAND_TAG --> [EXPRESSION]  = EXPRESSION}\n");
-		//printf("{COMMAND_TAG --> [EXPRESSION]  = EXPRESSION}\n");
+	//		fprintf(yyout, "{COMMAND_TAG --> [EXPRESSION]  = EXPRESSION}\n");
+			//printf("{COMMAND_TAG --> [EXPRESSION]  = EXPRESSION}\n");
 
-		Parse_EXPRESSION();
-		match(TOKEN_CBRACKET, 1, followArr, 3, firstArr);
-		match(TOKEN_ASSIGNEMENT, 1, followArr, 3, firstArr);
-		Parse_EXPRESSION();
-		break;
-
-	case TOKEN_POINTER:
-
-//		fprintf(yyout, "{COMMAND_TAG --> ^ = EXPRESSION}\n");
-		//printf("{COMMAND_TAG --> ^ = EXPRESSION}\n");
-
-		match(TOKEN_ASSIGNEMENT, 1, followArr, 3, firstArr);
-		Parse_EXPRESSION();
-		break;
-
-	case TOKEN_ASSIGNEMENT:
-		current_token = back_token();
-		leftOperand=symboltable_find(currentTable, current_token->lexeme)->type;
-		current_token = next_token();
-		
-//		fprintf(yyout, "{COMMAND_TAG --> = RECEIVER }\n");
-		//printf("{COMMAND_TAG --> = RECEIVER }\n");
-
-		rightOperand=Parse_RECEIVER();
-		/*switch (rightOperand) {
-		case TYPE_REAL:
-			if (leftOperand != TYPE_REAL) {
-				printf("Wrong assingment between types notReal=real");
-			}
+			Parse_EXPRESSION(0);
+			match(TOKEN_CBRACKET, 1, followArr, 3, firstArr);
+			match(TOKEN_ASSIGNEMENT, 1, followArr, 3, firstArr);
+			Parse_EXPRESSION(0);
 			break;
-		case TYPE_INT:
-			if (leftOperand != TYPE_INT && leftOperand != TYPE_REAL) {
-				printf("Wrong assingment between types");
-			}
-			break;
-		}
-		*/
-		if (rightOperand != leftOperand){
-			fprintf(yyout, "Semantic ERROR ---- Wrong assingment between types ----\n");
-		}
-		
-	default:
 
-		errorHandler(followArr, firstArr, 1, 3, current_token);
-		break;
+		case TOKEN_POINTER:
+
+	//		fprintf(yyout, "{COMMAND_TAG --> ^ = EXPRESSION}\n");
+			//printf("{COMMAND_TAG --> ^ = EXPRESSION}\n");
+
+			match(TOKEN_ASSIGNEMENT, 1, followArr, 3, firstArr);
+			Parse_EXPRESSION(0);
+			break;
+
+		case TOKEN_ASSIGNEMENT:
+			
+			current_token = back_token();
+			if (symboltable_find(currentTable, current_token->lexeme)!=NULL) {
+				leftOperand = symboltable_find(currentTable, current_token->lexeme)->type;
+				current_token = next_token();
+				rightOperand = Parse_RECEIVER(leftOperand);
+				if (leftOperand != TYPE_UNDEFINED && rightOperand != TYPE_UNDEFINED && rightOperand != leftOperand) {
+					printf("--Error: mismatch between types of the left and the right sides of the assignment\n");
+				}
+			}
+			else {
+				printf("--Error: variable %s is not declared\n", current_token->lexeme);
+				next_token();
+				next_token();
+			}
+			
+			break;
+			
+		
+		default:
+
+			errorHandler(followArr, firstArr, 1, 3, current_token);
+			break;
 	}
 }
 
-int Parse_RECEIVER()
+int Parse_RECEIVER(int type)
 {
 	SymbolTableEntry* entry;
 	Token* active;
