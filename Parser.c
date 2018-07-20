@@ -41,7 +41,7 @@ bool match(eTOKENS t, int size_follow, eTOKENS followArr[], int size_first, eTOK
 
 void Parser()
 {
-	printf("Parser");
+	printf("Parser\n");
 	Parse_PROGRAM();
 }
 
@@ -63,7 +63,7 @@ void Parse_PROGRAM()
 	{
 		case TOKEN_BLOCK:
 			//fprintf(yyout, "{PROGRAM --> BLOCK}\n");
-			printf("{PROGRAM --> BLOCK}\n");
+			//printf("{PROGRAM --> BLOCK}\n");
 			Parse_BLOCK();
 			break;
 		default:
@@ -103,7 +103,7 @@ void Parse_BLOCK()
 			//fprintf(yyout, "{Start - Sematic Analysis!}\n");
 			//fprintf(yyout, "{BLOCK --> block DEFINITIONS; begin COMMANDS; end}\n");
 			fprintf(yyout, "{Start - Sematic Analysis!}\n");
-			printf("{BLOCK --> block DEFINITIONS; begin COMMANDS; end}\n");
+			//printf("{BLOCK --> block DEFINITIONS; begin COMMANDS; end}\n");
 			Parse_DEFINITIONS();
 			match(TOKEN_SEMICOLON, 2, followArr, 1, firstArr);
 			match(TOKEN_BEGIN, 2, followArr, 1, firstArr);
@@ -145,7 +145,7 @@ void Parse_DEFINITIONS()
 		case TOKEN_ID:
 
 			//fprintf(yyout, "{DEFINITIONS --> DEFINITION  DEFINITION_TAG}\n");
-			printf("{DEFINITIONS --> DEFINITION  DEFINITION_TAG}\n");
+			//printf("{DEFINITIONS --> DEFINITION  DEFINITION_TAG}\n");
 			current_token = back_token();
 			Parse_DEFINITION();
 			Parse_DEFINITIONS_TAG();
@@ -170,11 +170,14 @@ void Parse_DEFINITIONS_TAG()
 	eTOKENS *followArr = (eTOKENS *)malloc(sizeof(eTOKENS) * 1);
 	followArr[0] = TOKEN_SEMICOLON;
 
+
 	Token *current_token = next_token();
 	if (!current_token)
 	{
 		return;
 	}
+	//No need for active token here
+	printf("Line number: %d\n", current_token->lineNumber);
 	switch (current_token->kind)
 	{
 
@@ -195,7 +198,7 @@ void Parse_DEFINITIONS_TAG()
 			case TOKEN_BEGIN:
 
 				//fprintf(yyout, "{DEFINITION_TAG --> NULL}\n");
-				printf( "{DEFINITION_TAG --> NULL}\n");
+				//printf( "{DEFINITION_TAG --> NULL}\n");
 				current_token = back_token();
 				current_token = back_token();
 				break;
@@ -204,7 +207,7 @@ void Parse_DEFINITIONS_TAG()
 			case TOKEN_TYPE:
 
 				//fprintf(yyout, "{DEFINITION_TAG -->; DEFINITION  DEFINITION_TAG}\n");
-				printf("{DEFINITION_TAG -->; DEFINITION  DEFINITION_TAG}\n");
+				//printf("{DEFINITION_TAG -->; DEFINITION  DEFINITION_TAG}\n");
 				current_token = back_token();
 				Parse_DEFINITION();
 				Parse_DEFINITIONS_TAG();
@@ -241,7 +244,7 @@ void Parse_DEFINITION()
 	case TOKEN_ID:
 
 		//fprintf(yyout, "{DEFINITION-->VAR_DEFINITION}\n");
-		printf("{DEFINITION-->VAR_DEFINITION}\n");
+		//printf("{DEFINITION-->VAR_DEFINITION}\n");
 		current_token = back_token();
 		Parse_VAR_DEFINITION();
 		break;
@@ -249,7 +252,7 @@ void Parse_DEFINITION()
 	case TOKEN_TYPE:
 
 		//fprintf(yyout, "{DEFINITION-->TYPE_DEFINITION}\n");
-		printf("{DEFINITION-->TYPE_DEFINITION}\n");
+		//printf("{DEFINITION-->TYPE_DEFINITION}\n");
 		current_token = back_token();
 		Parse_TYPE_DEFENITION();
 		break;
@@ -275,27 +278,34 @@ void Parse_VAR_DEFINITION()
 	{
 		return;
 	}
+	
+	SymbolTableEntry* entry;
+
 	switch (current_token->kind)
 	{
 		case TOKEN_ID:
 			//fprintf(yyout, "{VAR_DEFINITION-->id : VAR_DEFINITION_TAG}\n");
-			printf("{VAR_DEFINITION-->id : VAR_DEFINITION_TAG}\n");
-
+			//printf("{VAR_DEFINITION-->id : VAR_DEFINITION_TAG}\n");
+			 entry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
 			if (symboltable_lookup(currentTable, current_token->lexeme) == NULL)
 			{
-				SymbolTableEntry* entry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
+				
 				entry->type = type;
 				symboltable_insert(currentTable, current_token->lexeme, entry);
 			}
 			else
 			{
-				fprintf(yyout, "---Semantic Error, line %d: ID %s already defined in current scope. \n", current_token->lineNumber, current_token->lexeme);
+				printf("--Error: duplicated declaration of %s \n",current_token->lexeme);
 			}
-			break;
-
-
+			//Here!!!!
+			//
 			match(TOKEN_COLON, 1, followArr, 1, firstArr);
-			Parse_VAR_DEFINITION_TAG();
+
+			entry->type=Parse_VAR_DEFINITION_TAG();
+			if (entry->type == 0) {
+				printf("--Error: type %s \n", current_token->lexeme);
+			}
+
 			break;
 		default:
 			errorHandler(followArr, firstArr, 1, 1, current_token);
@@ -324,7 +334,7 @@ int Parse_VAR_DEFINITION_TAG()
 		case TOKEN_ID:
 
 			//fprintf(yyout, "{VAR_DEFINITION_TAG--> id}\n");
-			printf("{VAR_DEFINITION_TAG--> id}\n");
+			//printf("{VAR_DEFINITION_TAG--> id}\n");
 			return CheckTypeByID(current_token->lexeme);
 			break;
 
@@ -332,7 +342,7 @@ int Parse_VAR_DEFINITION_TAG()
 		case TOKEN_REAL:
 
 			//fprintf(yyout, "{VAR_DEFINITION_TAG--> BASIC_TYPE}\n");
-			printf("{VAR_DEFINITION_TAG--> BASIC_TYPE}\n");
+			//printf("{VAR_DEFINITION_TAG--> BASIC_TYPE}\n");
 
 
 			current_token = back_token();
@@ -373,31 +383,50 @@ void Parse_TYPE_DEFENITION()
 		
 
 			//fprintf(yyout, "{TYPE_DEFINITION-->type id is TYPE_INDICATOR}\n");
-			printf("{TYPE_DEFINITION-->type id is TYPE_INDICATOR}\n");
+			//printf("{TYPE_DEFINITION-->type id is TYPE_INDICATOR}\n");
 		
+			//
 			match(TOKEN_ID, 1, followArr, 1, firstArr);
-		
-		
-			//symboltable_insert(currentTable,)
-		
-			current_token = activeToken();
-		
-			//Already defined
+			
+			current_token = next_token();
+			current_token = back_token();
+			
+			entry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
+
 			if (symboltable_find(currentTable, current_token->lexeme) != NULL) {
-				fprintf(yyout, " -------- Semantcc Error, line %d: ID %s, Already defined in current scope!\n", current_token->lineNumber, current_token->lexeme);
+				fprintf(yyout, " -------- Semantic Error, line %d: ID %s, Already defined in current scope!\n", current_token->lineNumber, current_token->lexeme);
 			}
 			else
 			{
-				symboltable_insert(currentTable, current_token->lexeme, NULL);
+				
+				entry->type = typeHolderBeforeEnteringSymbolTable;
+
+				symboltable_insert(currentTable, current_token->lexeme, entry);
 			}
+			
+			match(TOKEN_IS, 1, followArr,1, firstArr);
+			
+			current_token = next_token();
+			current_token = back_token();
 
 			typeHolderBeforeEnteringSymbolTable = Parse_TYPE_INDICATOR();
-
-			if (typeHolderBeforeEnteringSymbolTable) {
-				printf("Parser Error - There is not type like that");
+			if (typeHolderBeforeEnteringSymbolTable == TYPE_UNDEFINED) {
+				printf("Parser Error - There is not a type like that");
+			}
+			else {
+				//symboltable_find(currentTable, current_token->lexeme)->type = typeHolderBeforeEnteringSymbolTable;
+				entry->type = typeHolderBeforeEnteringSymbolTable;
 			}
 
-			symboltable_find(currentTable, current_token->lexeme)->type = typeHolderBeforeEnteringSymbolTable;
+	
+		
+
+
+			//current_token = activeToken();
+			//current_token = next_token();
+			
+			//Already defined
+			
 			break;
 
 		default:
@@ -428,17 +457,17 @@ int Parse_TYPE_INDICATOR()
 		case TOKEN_INTEGER:
 		case TOKEN_REAL:
 			//fprintf(yyout, "{TYPE_INDICATOR-->BASIC_TYPE}\n");
-			printf("{TYPE_INDICATOR-->BASIC_TYPE}\n");
+			//printf("{TYPE_INDICATOR-->BASIC_TYPE}\n");
 			current_token = back_token();
 			return Parse_BASIC_TYPE();
 		case TOKEN_ARRAY:
 			//fprintf(yyout, "{TYPE_INDICATOR-->ARRAY_TYPE\n");
-			printf("{{TYPE_INDICATOR-->ARRAY_TYPE\n");
+			//printf("{{TYPE_INDICATOR-->ARRAY_TYPE\n");
 			current_token = back_token();
 			return Parse_ARRAY_TYPE();
 		case TOKEN_POINTER:
 			//fprintf(yyout, "{TYPE_INDICATOR-->POINTER_TYPE}\n");
-			printf("{TYPE_INDICATOR-->POINTER_TYPE}\n");
+			//printf("{TYPE_INDICATOR-->POINTER_TYPE}\n");
 			current_token = back_token();
 			return Parse_POINTER_TYPE();
 		default:
@@ -466,11 +495,11 @@ int Parse_BASIC_TYPE()
 	{
 		case TOKEN_INTEGER:
 		//	fprintf(yyout, "{BASIC_TYPE -->integer}\n");
-			printf("{BASIC_TYPE -->integer}\n");
+			//printf("{BASIC_TYPE -->integer}\n");
 			return TYPE_INT;
 		case TOKEN_REAL:
 			//fprintf(yyout, "{BASIC_TYPE -->real}\n");
-			printf("{BASIC_TYPE -->real}\n");
+			//printf("{BASIC_TYPE -->real}\n");
 			return TYPE_REAL;
 		default:
 			errorHandler(followArr, firstArr, 1, 2, current_token);
@@ -494,7 +523,7 @@ int Parse_ARRAY_TYPE()
 	{
 		case TOKEN_ARRAY:
 		//	fprintf(yyout, "{ARRAY_TYPE --> array [SIZE] of BASIC_TYPE}\n");
-			printf("{ARRAY_TYPE --> array [SIZE] of BASIC_TYPE}\n");
+			//printf("{ARRAY_TYPE --> array [SIZE] of BASIC_TYPE}\n");
 			match(TOKEN_OBRACKET, 1, followArr, 1, firstArr);
 			Parse_SIZE();
 			match(TOKEN_CBRACKET, 1, followArr, 1, firstArr);
@@ -524,7 +553,7 @@ int Parse_POINTER_TYPE()
 	case TOKEN_POINTER:
 
 		//fprintf(yyout, "{POINTER_TYPE --> ^ VAR_DEFINITION_TAG}\n");
-		printf("{POINTER_TYPE --> ^ VAR_DEFINITION_TAG}\n");
+		//printf("{POINTER_TYPE --> ^ VAR_DEFINITION_TAG}\n");
 		return TYPE_POINTER + Parse_VAR_DEFINITION_TAG();
 		break;
 
@@ -553,7 +582,7 @@ void Parse_SIZE()
 
 	case TOKEN_INT:
 		//fprintf(yyout, "{SIZE --> int_num} \t %s\n", current_token->lexeme);
-		printf("{SIZE --> int_num} \t %s\n", current_token->lexeme);
+		//printf("{SIZE --> int_num} \t %s\n", current_token->lexeme);
 		break;
 
 	default:
@@ -589,7 +618,7 @@ void Parse_COMMANDS()
 	case TOKEN_BLOCK:
 
 		//fprintf(yyout, "{COMMANDS --> COMMAND COMMANDS_TAG}\n");
-		printf("{COMMANDS --> COMMAND COMMANDS_TAG}\n");
+		//printf("{COMMANDS --> COMMAND COMMANDS_TAG}\n");
 
 		current_token = back_token();
 		Parse_COMMAND();
@@ -646,7 +675,7 @@ void Parse_COMMANDS_TAG()
 		case TOKEN_END_FOR:
 
 	//		fprintf(yyout, "{COMMAND_TAG --> NULL}\n");
-			printf("{COMMAND_TAG --> NULL}\n");
+			//printf("{COMMAND_TAG --> NULL}\n");
 
 			current_token = back_token();
 			current_token = back_token();
@@ -659,7 +688,7 @@ void Parse_COMMANDS_TAG()
 		case TOKEN_BLOCK:
 
 //			fprintf(yyout, "{COMMANDS_TAG -->;COMMAND COMMANDS_TAG}\n");
-			printf( "{COMMANDS_TAG -->;COMMAND COMMANDS_TAG}\n");
+			//printf( "{COMMANDS_TAG -->;COMMAND COMMANDS_TAG}\n");
 
 			current_token = back_token();
 			Parse_COMMAND();
@@ -700,7 +729,7 @@ void Parse_COMMAND()
 	case TOKEN_ID:
 
 //		fprintf(yyout, "{COMMAND --> id COMMAND_TAG}\n");
-		printf("{COMMAND --> id COMMAND_TAG}\n");
+		//printf("{COMMAND --> id COMMAND_TAG}\n");
 		
 		Parse_COMMAND_TAG();
 		break;
@@ -708,7 +737,7 @@ void Parse_COMMAND()
 	case TOKEN_WHEN:
 
 //		fprintf(yyout, "{COMMAND --> when (EXPRESSION rel_op EXPRESSION) do COMMANDS; default COMMANDS; end_when}\n");
-		printf("{COMMAND --> when (EXPRESSION rel_op EXPRESSION) do COMMANDS; default COMMANDS; end_when}\n");
+		//printf("{COMMAND --> when (EXPRESSION rel_op EXPRESSION) do COMMANDS; default COMMANDS; end_when}\n");
 
 		match(TOKEN_OPARENTHESIS, 1, followArr, 5, firstArr);
 		Parse_EXPRESSION();
@@ -727,7 +756,7 @@ void Parse_COMMAND()
 	case TOKEN_FOR:
 
 //		fprintf(yyout, "{COMMAND-->for (id = EXPRESSION; id rel_op EXPRESSION; id++)COMMANDS; end_for}\n");
-		printf("{COMMAND-->for (id = EXPRESSION; id rel_op EXPRESSION; id++)COMMANDS; end_for}\n");
+		//printf("{COMMAND-->for (id = EXPRESSION; id rel_op EXPRESSION; id++)COMMANDS; end_for}\n");
 
 		match(TOKEN_OPARENTHESIS, 1, followArr, 5, firstArr);
 		match(TOKEN_ID, 1, followArr, 5, firstArr);
@@ -749,7 +778,7 @@ void Parse_COMMAND()
 	case TOKEN_FREE:
 
 //		fprintf(yyout, "{COMMAND-->free(id)}\n");
-		printf("{COMMAND-->free(id)}\n");
+		//printf("{COMMAND-->free(id)}\n");
 
 		match(TOKEN_OPARENTHESIS, 1, followArr, 5, firstArr);
 		match(TOKEN_ID, 1, followArr, 5, firstArr);
@@ -759,7 +788,7 @@ void Parse_COMMAND()
 	case TOKEN_BLOCK:
 
 //		fprintf(yyout, "{COMMAND-->BLOCK}\n");
-		printf("{COMMAND-->BLOCK}\n");
+		//printf("{COMMAND-->BLOCK}\n");
 
 		Parse_BLOCK();
 		break;
@@ -792,7 +821,7 @@ void Parse_COMMAND_TAG()
 	case TOKEN_OBRACKET:
 
 //		fprintf(yyout, "{COMMAND_TAG --> [EXPRESSION]  = EXPRESSION}\n");
-		printf("{COMMAND_TAG --> [EXPRESSION]  = EXPRESSION}\n");
+		//printf("{COMMAND_TAG --> [EXPRESSION]  = EXPRESSION}\n");
 
 		Parse_EXPRESSION();
 		match(TOKEN_CBRACKET, 1, followArr, 3, firstArr);
@@ -803,7 +832,7 @@ void Parse_COMMAND_TAG()
 	case TOKEN_POINTER:
 
 //		fprintf(yyout, "{COMMAND_TAG --> ^ = EXPRESSION}\n");
-		printf("{COMMAND_TAG --> ^ = EXPRESSION}\n");
+		//printf("{COMMAND_TAG --> ^ = EXPRESSION}\n");
 
 		match(TOKEN_ASSIGNEMENT, 1, followArr, 3, firstArr);
 		Parse_EXPRESSION();
@@ -815,7 +844,7 @@ void Parse_COMMAND_TAG()
 		current_token = next_token();
 		
 //		fprintf(yyout, "{COMMAND_TAG --> = RECEIVER }\n");
-		printf("{COMMAND_TAG --> = RECEIVER }\n");
+		//printf("{COMMAND_TAG --> = RECEIVER }\n");
 
 		rightOperand=Parse_RECEIVER();
 		/*switch (rightOperand) {
@@ -865,7 +894,7 @@ int Parse_RECEIVER()
 		case TOKEN_MALLOC:
 
 	//		fprintf(yyout, "{RECEIVER --> malloc(size_of(id))}\n");
-			printf("{RECEIVER --> malloc(size_of(id))}\n");
+			//printf("{RECEIVER --> malloc(size_of(id))}\n");
 
 			match(TOKEN_OPARENTHESIS, 1, followArr, 6, firstArr);
 			match(TOKEN_SIZE_OF, 1, followArr, 6, firstArr);
@@ -897,7 +926,7 @@ int Parse_RECEIVER()
 		case TOKEN_ID:
 
 		//	fprintf(yyout, "{RECEIVER --> EXPRESSION}\n");
-			printf("{RECEIVER --> EXPRESSION}\n");
+			//printf("{RECEIVER --> EXPRESSION}\n");
 
 			current_token = back_token();
 			Parse_EXPRESSION();
@@ -936,7 +965,7 @@ void Parse_EXPRESSION()
 	case TOKEN_ID:
 
 //		fprintf(yyout, "{EXPRESSION --> id EXPRESSION_TAG}\n");
-		printf("{EXPRESSION --> id EXPRESSION_TAG}\n");
+		//printf("{EXPRESSION --> id EXPRESSION_TAG}\n");
 
 		Parse_EXPRESSION_TAG();
 		break;
@@ -944,21 +973,21 @@ void Parse_EXPRESSION()
 	case TOKEN_INT:
 
 //		fprintf(yyout, "{EXPRESSION --> int_num}\n");
-		printf("{EXPRESSION --> int_num}\n");
+		//printf("{EXPRESSION --> int_num}\n");
 
 		break;
 
 	case TOKEN_REAL:
 
 //	fprintf(yyout, "{EXPRESSION --> real_num}\n");
-		printf("{EXPRESSION --> real_num}\n");
+		//printf("{EXPRESSION --> real_num}\n");
 
 		break;
 
 	case TOKEN_MEMORY:
 
 	//	fprintf(yyout, "{EXPRESSION --> &id}\n");
-		printf("{EXPRESSION --> &id}\n");
+		//printf("{EXPRESSION --> &id}\n");
 
 		match(TOKEN_ID, 4, followArr, 5, firstArr);
 		break;
@@ -966,7 +995,7 @@ void Parse_EXPRESSION()
 	case TOKEN_SIZE_OF:
 
 //		fprintf(yyout, "{EXPRESSION --> size_of(id)}\n");
-		printf("{EXPRESSION --> size_of(id)}\n");
+		//printf("{EXPRESSION --> size_of(id)}\n");
 
 		match(TOKEN_OPARENTHESIS, 4, followArr, 5, firstArr);
 		match(TOKEN_ID, 4, followArr, 5, firstArr);
@@ -1013,7 +1042,7 @@ void Parse_EXPRESSION_TAG()
 	case TOKEN_OBRACKET:
 
 	//	fprintf(yyout, "{EXPRESSION_TAG --> [EXPRESSION]}\n");
-		printf("{EXPRESSION_TAG --> [EXPRESSION]}\n");
+		//printf("{EXPRESSION_TAG --> [EXPRESSION]}\n");
 
 		Parse_EXPRESSION();
 		match(TOKEN_CBRACKET, 4, followArr, 7, firstArr);
@@ -1022,7 +1051,7 @@ void Parse_EXPRESSION_TAG()
 	case TOKEN_POINTER:
 
 //		fprintf(yyout, "{EXPRESSION_TAG --> ^}\n");
-		printf("{EXPRESSION_TAG --> ^}\n");
+		//printf("{EXPRESSION_TAG --> ^}\n");
 
 		break;
 
@@ -1032,7 +1061,7 @@ void Parse_EXPRESSION_TAG()
 	case TOKEN_DIVIDE:
 	case TOKEN_POW:
 //		fprintf(yyout, "{EXPRESSION_TAG --> ar_op EXPRESSION}\n");
-		printf("{EXPRESSION_TAG --> ar_op EXPRESSION}\n");
+		//printf("{EXPRESSION_TAG --> ar_op EXPRESSION}\n");
 
 		Parse_EXPRESSION();
 		break;
@@ -1043,7 +1072,7 @@ void Parse_EXPRESSION_TAG()
 	case TOKEN_SEMICOLON:
 
 		//fprintf(yyout, "{EXPRESSION_TAG --> NULL}\n");
-		printf("{EXPRESSION_TAG --> NULL}\n");
+		//printf("{EXPRESSION_TAG --> NULL}\n");
 
 		current_token = back_token();
 
