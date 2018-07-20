@@ -10,7 +10,7 @@ int lineNumber=1;
 %name lex
 
 LETTER [a-z|A-Z]
-ID ({LETTER}+"_")*{LETTER}+
+ID ({LETTER}+{INT}*"_")*{LETTER}+{INT}*
 DIGIT [0-9]
 INT [0|1-9]{DIGIT}*
 REAL {INT}+"."{INT}+
