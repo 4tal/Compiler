@@ -1047,10 +1047,14 @@ void Parse_EXPRESSION_TAG()
 	case TOKEN_PLUS:
 	case TOKEN_DIVIDE:
 	case TOKEN_POW:
-//		fprintf(yyout, "{EXPRESSION_TAG --> ar_op EXPRESSION}\n");
-		//printf("{EXPRESSION_TAG --> ar_op EXPRESSION}\n");
-
-		Parse_EXPRESSION();
+		current_token = back_token();
+		if (symboltable_find(currentTable, current_token->lexeme) != NULL) {
+			leftOp = symboltable_find(currentTable, current_token->lexeme)->type;
+		}
+		current_token = next_token();
+		
+		 
+		Parse_EXPRESSION(leftOp);
 		break;
 
 	case TOKEN_REL_OP:
