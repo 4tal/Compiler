@@ -1031,7 +1031,7 @@ void Parse_EXPRESSION_TAG()
 	//	fprintf(yyout, "{EXPRESSION_TAG --> [EXPRESSION]}\n");
 		//printf("{EXPRESSION_TAG --> [EXPRESSION]}\n");
 
-		Parse_EXPRESSION();
+		Parse_EXPRESSION(0);
 		match(TOKEN_CBRACKET, 4, followArr, 7, firstArr);
 		break;
 
