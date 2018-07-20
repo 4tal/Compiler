@@ -112,5 +112,8 @@ int hashtable_hash_func(char* key)
 		char x = key[i];
 		mul *= x;
 	}
+	if (mul < 0) {
+		mul = mul*-1;
+	}
 	return mul % HASH_SIZE;
 }
