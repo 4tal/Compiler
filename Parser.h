@@ -28,9 +28,9 @@ void Parse_COMMANDS();
 void Parse_COMMANDS_TAG();
 void Parse_COMMAND();
 void Parse_COMMAND_TAG();
-int Parse_RECEIVER();
-void Parse_EXPRESSION();
-void Parse_EXPRESSION_TAG();
+int Parse_RECEIVER(int type);
+int Parse_EXPRESSION(int type);
+void Parse_EXPRESSION_TAG(int type);
 
 
 #endif
