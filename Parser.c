@@ -634,7 +634,6 @@ void Parse_COMMANDS()
 
 void Parse_COMMANDS_TAG()
 {
-
 	eTOKENS *firstArr_inside;
 	eTOKENS *followArr_inside;
 	eTOKENS *firstArr = (eTOKENS *)malloc(sizeof(eTOKENS) * 1);
@@ -648,62 +647,59 @@ void Parse_COMMANDS_TAG()
 		return;
 	switch (current_token->kind)
 	{
+		case TOKEN_SEMICOLON:
 
-	case TOKEN_SEMICOLON:
+			firstArr_inside = (eTOKENS *)malloc(sizeof(eTOKENS) * 9);
+			firstArr_inside[0] = TOKEN_END;
+			firstArr_inside[1] = TOKEN_DEFAULT;
+			firstArr_inside[2] = TOKEN_END_WHEN;
+			firstArr_inside[3] = TOKEN_END_FOR;
+			firstArr_inside[4] = TOKEN_ID;
+			firstArr_inside[5] = TOKEN_WHEN;
+			firstArr_inside[6] = TOKEN_FOR;
+			firstArr_inside[7] = TOKEN_FREE;
+			firstArr_inside[8] = TOKEN_BLOCK;
 
-		firstArr_inside = (eTOKENS *)malloc(sizeof(eTOKENS) * 9);
-		firstArr_inside[0] = TOKEN_END;
-		firstArr_inside[1] = TOKEN_DEFAULT;
-		firstArr_inside[2] = TOKEN_END_WHEN;
-		firstArr_inside[3] = TOKEN_END_FOR;
-		firstArr_inside[4] = TOKEN_ID;
-		firstArr_inside[5] = TOKEN_WHEN;
-		firstArr_inside[6] = TOKEN_FOR;
-		firstArr_inside[7] = TOKEN_FREE;
-		firstArr_inside[8] = TOKEN_BLOCK;
+			followArr_inside = (eTOKENS *)malloc(sizeof(eTOKENS) * 1);
+			followArr_inside[0] = TOKEN_SEMICOLON;
 
-		followArr_inside = (eTOKENS *)malloc(sizeof(eTOKENS) * 1);
-		followArr_inside[0] = TOKEN_SEMICOLON;
+			current_token = next_token();
+			switch (current_token->kind)
+			{
+				case TOKEN_END:
+				case TOKEN_DEFAULT:
+				case TOKEN_END_WHEN:
+				case TOKEN_END_FOR:
 
-		current_token = next_token();
-		switch (current_token->kind)
-		{
+			//		fprintf(yyout, "{COMMAND_TAG --> NULL}\n");
+					//printf("{COMMAND_TAG --> NULL}\n");
 
-		case TOKEN_END:
-		case TOKEN_DEFAULT:
-		case TOKEN_END_WHEN:
-		case TOKEN_END_FOR:
+					current_token = back_token();
+					current_token = back_token();
+					break;
 
-	//		fprintf(yyout, "{COMMAND_TAG --> NULL}\n");
-			//printf("{COMMAND_TAG --> NULL}\n");
+				case TOKEN_ID:
+				case TOKEN_WHEN:
+				case TOKEN_FOR:
+				case TOKEN_FREE:
+				case TOKEN_BLOCK:
 
-			current_token = back_token();
-			current_token = back_token();
+
+
+					current_token = back_token();
+					Parse_COMMAND();
+					Parse_COMMANDS_TAG();
+					break;
+
+				default:
+
+					errorHandler(followArr_inside, firstArr_inside, 1, 9, current_token);
+					break;
+			}
 			break;
-
-		case TOKEN_ID:
-		case TOKEN_WHEN:
-		case TOKEN_FOR:
-		case TOKEN_FREE:
-		case TOKEN_BLOCK:
-
-//			fprintf(yyout, "{COMMANDS_TAG -->;COMMAND COMMANDS_TAG}\n");
-			//printf( "{COMMANDS_TAG -->;COMMAND COMMANDS_TAG}\n");
-
-			current_token = back_token();
-			Parse_COMMAND();
-			Parse_COMMANDS_TAG();
-			break;
-
 		default:
-
-			errorHandler(followArr_inside, firstArr_inside, 1, 9, current_token);
+			errorHandler(followArr, firstArr, 1, 1, current_token);
 			break;
-		}
-		break;
-	default:
-		errorHandler(followArr, firstArr, 1, 1, current_token);
-		break;
 	}
 }
 
@@ -725,78 +721,74 @@ void Parse_COMMAND()
 		return;
 	switch (current_token->kind)
 	{
-
-	case TOKEN_ID:
-
-//		fprintf(yyout, "{COMMAND --> id COMMAND_TAG}\n");
-		//printf("{COMMAND --> id COMMAND_TAG}\n");
+		case TOKEN_ID:
 		
-		Parse_COMMAND_TAG();
-		break;
+			Parse_COMMAND_TAG();
+			break;
 
-	case TOKEN_WHEN:
+		case TOKEN_WHEN:
 
-//		fprintf(yyout, "{COMMAND --> when (EXPRESSION rel_op EXPRESSION) do COMMANDS; default COMMANDS; end_when}\n");
-		//printf("{COMMAND --> when (EXPRESSION rel_op EXPRESSION) do COMMANDS; default COMMANDS; end_when}\n");
+	//		fprintf(yyout, "{COMMAND --> when (EXPRESSION rel_op EXPRESSION) do COMMANDS; default COMMANDS; end_when}\n");
+			//printf("{COMMAND --> when (EXPRESSION rel_op EXPRESSION) do COMMANDS; default COMMANDS; end_when}\n");
 
-		match(TOKEN_OPARENTHESIS, 1, followArr, 5, firstArr);
-		Parse_EXPRESSION();
-		match(TOKEN_REL_OP, 1, followArr, 5, firstArr);
-		Parse_EXPRESSION();
-		match(TOKEN_CPARENTHESIS, 1, followArr, 5, firstArr);
-		match(TOKEN_DO, 1, followArr, 5, firstArr);
-		Parse_COMMANDS();
-		match(TOKEN_SEMICOLON, 1, followArr, 5, firstArr);
-		match(TOKEN_DEFAULT, 1, followArr, 5, firstArr);
-		Parse_COMMANDS();
-		match(TOKEN_SEMICOLON, 1, followArr, 5, firstArr);
-		match(TOKEN_END_WHEN, 1, followArr, 5, firstArr);
-		break;
+			match(TOKEN_OPARENTHESIS, 1, followArr, 5, firstArr);
+			Parse_EXPRESSION(0);
+			match(TOKEN_REL_OP, 1, followArr, 5, firstArr);
+			Parse_EXPRESSION(0);
+			match(TOKEN_CPARENTHESIS, 1, followArr, 5, firstArr);
+			match(TOKEN_DO, 1, followArr, 5, firstArr);
+			Parse_COMMANDS();
+			match(TOKEN_SEMICOLON, 1, followArr, 5, firstArr);
+			match(TOKEN_DEFAULT, 1, followArr, 5, firstArr);
+			Parse_COMMANDS();
+			match(TOKEN_SEMICOLON, 1, followArr, 5, firstArr);
+			match(TOKEN_END_WHEN, 1, followArr, 5, firstArr);
+			break;
 
-	case TOKEN_FOR:
+		case TOKEN_FOR:
 
-//		fprintf(yyout, "{COMMAND-->for (id = EXPRESSION; id rel_op EXPRESSION; id++)COMMANDS; end_for}\n");
-		//printf("{COMMAND-->for (id = EXPRESSION; id rel_op EXPRESSION; id++)COMMANDS; end_for}\n");
+	//		fprintf(yyout, "{COMMAND-->for (id = EXPRESSION; id rel_op EXPRESSION; id++)COMMANDS; end_for}\n");
+			//printf("{COMMAND-->for (id = EXPRESSION; id rel_op EXPRESSION; id++)COMMANDS; end_for}\n");
 
-		match(TOKEN_OPARENTHESIS, 1, followArr, 5, firstArr);
-		match(TOKEN_ID, 1, followArr, 5, firstArr);
-		match(TOKEN_ASSIGNEMENT, 1, followArr, 5, firstArr);
-		Parse_EXPRESSION();
-		match(TOKEN_SEMICOLON, 1, followArr, 5, firstArr);
-		match(TOKEN_ID, 1, followArr, 5, firstArr);
-		match(TOKEN_REL_OP, 1, followArr, 5, firstArr);
-		Parse_EXPRESSION();
-		match(TOKEN_SEMICOLON, 1, followArr, 5, firstArr);
-		match(TOKEN_ID, 1, followArr, 5, firstArr);
-		match(TOKEN_PLUS, 1, followArr, 5, firstArr);
-		match(TOKEN_CPARENTHESIS, 1, followArr, 5, firstArr);
-		Parse_COMMANDS();
-		match(TOKEN_SEMICOLON, 1, followArr, 5, firstArr);
-		match(TOKEN_END_FOR, 1, followArr, 5, firstArr);
-		break;
+			match(TOKEN_OPARENTHESIS, 1, followArr, 5, firstArr);
+			match(TOKEN_ID, 1, followArr, 5, firstArr);
+			match(TOKEN_ASSIGNEMENT, 1, followArr, 5, firstArr);
+			Parse_EXPRESSION(0);
+			match(TOKEN_SEMICOLON, 1, followArr, 5, firstArr);
+			match(TOKEN_ID, 1, followArr, 5, firstArr);
+			match(TOKEN_REL_OP, 1, followArr, 5, firstArr);
+			Parse_EXPRESSION(0);
+			match(TOKEN_SEMICOLON, 1, followArr, 5, firstArr);
+			match(TOKEN_ID, 1, followArr, 5, firstArr);
+			match(TOKEN_PLUS, 1, followArr, 5, firstArr);
+			match(TOKEN_CPARENTHESIS, 1, followArr, 5, firstArr);
+			Parse_COMMANDS();
+			match(TOKEN_SEMICOLON, 1, followArr, 5, firstArr);
+			match(TOKEN_END_FOR, 1, followArr, 5, firstArr);
+			break;
 
-	case TOKEN_FREE:
+		case TOKEN_FREE:
 
-//		fprintf(yyout, "{COMMAND-->free(id)}\n");
-		//printf("{COMMAND-->free(id)}\n");
+	//		fprintf(yyout, "{COMMAND-->free(id)}\n");
+			//printf("{COMMAND-->free(id)}\n");
 
-		match(TOKEN_OPARENTHESIS, 1, followArr, 5, firstArr);
-		match(TOKEN_ID, 1, followArr, 5, firstArr);
-		match(TOKEN_CPARENTHESIS, 1, followArr, 5, firstArr);
-		break;
+			match(TOKEN_OPARENTHESIS, 1, followArr, 5, firstArr);
+			match(TOKEN_ID, 1, followArr, 5, firstArr);
+			match(TOKEN_CPARENTHESIS, 1, followArr, 5, firstArr);
+			break;
 
-	case TOKEN_BLOCK:
+		case TOKEN_BLOCK:
 
-//		fprintf(yyout, "{COMMAND-->BLOCK}\n");
-		//printf("{COMMAND-->BLOCK}\n");
+	//		fprintf(yyout, "{COMMAND-->BLOCK}\n");
+			//printf("{COMMAND-->BLOCK}\n");
 
-		Parse_BLOCK();
-		break;
+			Parse_BLOCK();
+			break;
 
-	default:
+		default:
 
-		errorHandler(followArr, firstArr, 1, 5, current_token);
-		break;
+			errorHandler(followArr, firstArr, 1, 5, current_token);
+			break;
 	}
 }
 
