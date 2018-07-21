@@ -15,6 +15,7 @@
 
 typedef struct SymbolTableEntry {
 	int type; // TYPE_REAL / TYPE_INT
+	int userDefined;
 } SymbolTableEntry;
 
 typedef struct SymbolTable {
