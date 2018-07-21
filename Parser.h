@@ -17,10 +17,10 @@ void Parse_DEFINITIONS();
 void Parse_DEFINITION();
 void Parse_DEFINITIONS_TAG();
 void Parse_VAR_DEFINITION();
-int Parse_VAR_DEFINITION_TAG();
+int Parse_VAR_DEFINITION_TAG(SymbolTableEntry* entry);
 void Parse_TYPE_DEFENITION();
 int Parse_TYPE_INDICATOR();
-int Parse_BASIC_TYPE();
+int Parse_BASIC_TYPE(SymbolTableEntry* entry);
 int Parse_ARRAY_TYPE();
 int Parse_POINTER_TYPE();
 void Parse_SIZE();
@@ -30,7 +30,7 @@ void Parse_COMMAND();
 void Parse_COMMAND_TAG();
 int Parse_RECEIVER(int type);
 int Parse_EXPRESSION(int type);
-void Parse_EXPRESSION_TAG(int type);
+int Parse_EXPRESSION_TAG(int type);
 
 
 #endif
