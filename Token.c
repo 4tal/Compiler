@@ -18,7 +18,7 @@ void errorHandler(eTOKENS *followArr, eTOKENS *firstArr, int size_follow, int si
 	int flag = 1;
 	int index = 0;
 	int i;
-	fprintf(yyout, "----Semantic Error at line: %d\n", current_token->lineNumber);
+	//fprintf(yyout, "----Semantic Error at line: %d\n", current_token->lineNumber);
 	for (index = 0; index < size_follow; index++)
 	{
 		while (current_token && flag)
